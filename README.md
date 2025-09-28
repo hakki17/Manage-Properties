@@ -133,7 +133,7 @@ docker run -d -p 8080:8080 --name property-management-app \
 ```
 
 2. Verificar estado:
-![Docker PS](https://github.com/hakki17/Manage-Properties/blob/main/img/9.%20docker%20ps.png)
+![Docker PS](https://github.com/hakki17/Manage-Properties/blob/main/img/18.backend.png)
 
 ### Paso 7: Pruebas del Sistema
 
