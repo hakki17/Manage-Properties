@@ -6,6 +6,10 @@ Sistema web para gestión de propiedades inmobiliarias con operaciones CRUD (Cre
 ## Video funcionamiento
 https://youtu.be/NnYa5hx0hWs
 
+## Estructura del Proyecto
+
+![](https://github.com/hakki17/Manage-Properties/blob/main/img/15.tree.png)
+
 ## Arquitectura del Sistema
 
 ### Componentes
@@ -15,9 +19,61 @@ https://youtu.be/NnYa5hx0hWs
 - **Contenedores**: Docker para empaquetado
 - **Infraestructura**: 2 instancias EC2 en AWS
 
+![](https://github.com/hakki17/Manage-Properties/blob/main/img/17.arquitectura.png)
+
 ### Distribución en AWS
 - **Instancia 1**: MySQL Database (IP: 54.225.47.98)
 - **Instancia 2**: Backend Spring Boot (IP: 3.82.46.79)
+
+## Diseño de Clases
+
+### Modelo Property
+```java
+@Entity
+@Table(name = "properties")
+public class Property {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(nullable = false)
+    private String address;
+    
+    @Column(nullable = false)
+    private Double price;
+    
+    @Column(nullable = false)
+    private Double size;
+    
+    @Column(length = 500)
+    private String description;
+}
+```
+
+### Controlador REST
+```java
+@RestController
+@RequestMapping("/api/properties")
+@CrossOrigin(origins = "*")
+public class PropertyController {
+    // Endpoints CRUD:
+    // POST   /api/properties         - Crear propiedad
+    // GET    /api/properties         - Listar todas
+    // GET    /api/properties/{id}    - Obtener por ID
+    // PUT    /api/properties/{id}    - Actualizar
+    // DELETE /api/properties/{id}    - Eliminar
+}
+```
+
+### Repository
+```java
+@Repository
+public interface PropertyRepository extends JpaRepository<Property, Long> {
+    List<Property> findByAddressContainingIgnoreCase(String address);
+    List<Property> findByPriceBetween(Double minPrice, Double maxPrice);
+    List<Property> findBySizeGreaterThanEqual(Double minSize);
+}
+```
 
 ## Proceso de Despliegue
 
@@ -88,9 +144,6 @@ docker run -d -p 8080:8080 --name property-management-app \
 ![Property Details](https://github.com/hakki17/Manage-Properties/blob/main/img/13.prueba%20funciona%204.png)
 ![Property Update](https://github.com/hakki17/Manage-Properties/blob/main/img/14.prueba%20funciona%205.png)
 
-## Estructura del Proyecto
-
-![](https://github.com/hakki17/Manage-Properties/blob/main/img/14.tree.png)
 
 ## Configuración
 
@@ -121,9 +174,53 @@ server.port=8080
 - **Frontend**: http://3.82.46.79:8080
 
 ## Video Demostración
-![Video Demo](https://youtu.be/NnYa5hx0hWs)
+https://youtu.be/NnYa5hx0hWs
 
 [Ver video de despliegue completo]
+
+## Pruebas Unitarias
+
+El proyecto incluye pruebas completas para todas las operaciones CRUD:
+
+### Pruebas Implementadas
+- **contextLoads**: Verifica que el contexto de Spring se carga correctamente
+- **testCreateProperty**: Prueba la creación de nuevas propiedades
+- **testGetAllProperties**: Verifica la obtención de todas las propiedades
+- **testGetPropertyById**: Prueba la búsqueda por ID
+- **testUpdateProperty**: Verifica la actualización de propiedades
+- **testDeleteProperty**: Prueba la eliminación de propiedades
+
+### Ejecutar las pruebas
+```bash
+mvn test
+```
+
+![](https://github.com/hakki17/Manage-Properties/blob/main/img/16.test.png)
+
+### Clase de Test
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class PropertyManagementApplicationTests {
+    
+    @Test
+    void contextLoads() { }
+    
+    @Test
+    void testCreateProperty() { }
+    
+    @Test
+    void testGetAllProperties() { }
+    
+    @Test
+    void testGetPropertyById() { }
+    
+    @Test
+    void testUpdateProperty() { }
+    
+    @Test
+    void testDeleteProperty() { }
+}
+```
 
 ## Funcionalidades Implementadas
 
