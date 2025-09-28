@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8080/api/properties';
+const API_URL = 'http://3.82.46.79:8080/api/properties';
 let editingId = null;
 
 // Cargar propiedades cuando se carga la página
@@ -21,36 +21,47 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadProperties() {
     try {
         const response = await fetch(API_URL);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const properties = await response.json();
+        console.log('Propiedades cargadas:', properties);
         
         const tbody = document.getElementById('properties-list');
         tbody.innerHTML = '';
         
-        properties.forEach(property => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${property.id}</td>
-                    <td>${property.address}</td>
-                    <td>${property.price}</td>
-                    <td>${property.size} m²</td>
-                    <td>${property.description || 'N/A'}</td>
-                    <td>
-                        <button onclick="editProperty(${property.id})" class="action-btn edit-btn">
-                            Editar
-                        </button>
-                        <button onclick="deleteProperty(${property.id})" class="action-btn delete-btn">
-                            Eliminar
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
+        if (properties.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6">No hay propiedades</td></tr>';
+        } else {
+            properties.forEach(property => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${property.id}</td>
+                        <td>${property.address}</td>
+                        <td>${property.price}</td>
+                        <td>${property.size} m²</td>
+                        <td>${property.description || 'N/A'}</td>
+                        <td>
+                            <button onclick="editProperty(${property.id})" class="action-btn edit-btn">
+                                Editar
+                            </button>
+                            <button onclick="deleteProperty(${property.id})" class="action-btn delete-btn">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
         
         document.getElementById('loading').style.display = 'none';
         document.getElementById('properties-table').style.display = 'table';
         
     } catch (error) {
-        alert('Error al cargar propiedades');
+        console.error('Error completo:', error);
+        alert('Error al cargar propiedades: ' + error.message);
     }
 }
 
@@ -68,34 +79,44 @@ async function saveProperty() {
         description: description
     };
     
+    console.log('Enviando propiedad:', property);
+    
     try {
+        let response;
+        
         if (editingId) {
-            // Actualizar propiedad existente
-            await fetch(`${API_URL}/${editingId}`, {
+            response = await fetch(`${API_URL}/${editingId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(property)
             });
-            alert('Propiedad actualizada exitosamente');
         } else {
-            // Crear nueva propiedad
-            await fetch(API_URL, {
+            response = await fetch(API_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(property)
             });
-            alert('Propiedad creada exitosamente');
         }
         
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        console.log('Respuesta del servidor:', result);
+        
+        alert(editingId ? 'Propiedad actualizada exitosamente' : 'Propiedad creada exitosamente');
         cancelEdit();
         loadProperties();
         
     } catch (error) {
-        alert('Error al guardar propiedad');
+        console.error('Error completo:', error);
+        alert('Error al guardar propiedad: ' + error.message);
     }
 }
 
@@ -103,6 +124,11 @@ async function saveProperty() {
 async function editProperty(id) {
     try {
         const response = await fetch(`${API_URL}/${id}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const property = await response.json();
         
         // Llenar formulario con los datos
@@ -118,7 +144,8 @@ async function editProperty(id) {
         document.getElementById('cancel-btn').style.display = 'inline-block';
         
     } catch (error) {
-        alert('Error al cargar propiedad');
+        console.error('Error completo:', error);
+        alert('Error al cargar propiedad: ' + error.message);
     }
 }
 
@@ -135,15 +162,20 @@ function cancelEdit() {
 async function deleteProperty(id) {
     if (confirm('¿Eliminar esta propiedad?')) {
         try {
-            await fetch(`${API_URL}/${id}`, {
+            const response = await fetch(`${API_URL}/${id}`, {
                 method: 'DELETE'
             });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             alert('Propiedad eliminada');
             loadProperties();
             
         } catch (error) {
-            alert('Error al eliminar');
+            console.error('Error completo:', error);
+            alert('Error al eliminar: ' + error.message);
         }
     }
 }
